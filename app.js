@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const morgan = require("morgan")
 const bodyParser = require("body-parser")
 const cookieParser = require("cookie-parser")
+const path = require('path')
 //This is used to avoid errors when connected to client because they are running on different ports
 const cors = require("cors")
 const expressValidator = require("express-validator")
@@ -12,8 +13,7 @@ require('dotenv').config()
 const app = express()
 
 //db connection
-mongoose.connect(
-    process.env.MONGO_URI,
+mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI,
     {useNewUrlParser: true,
     useUnifiedTopology: true}
 )
@@ -60,5 +60,13 @@ app.use("/api", braintreeRoutes)
 app.use("/api", orderRoutes)
 
 const port = process.env.PORT || 8000
+
+if (process.env.NODE_ENV === "production") {
+    app.use(express.static('client/build'))
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'))
+    })
+}
 
 app.listen(port, () => console.log(`Listening to port: ${port}`))
